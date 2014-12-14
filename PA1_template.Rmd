@@ -52,6 +52,10 @@ ggplot(steps_per_interval, aes(x=interval, y=steps)) +
 ```
 
 **Project Requirement 3: Imputing missing values**  
+I have tried two methods of inputing the missing values.  
+One taking the mean of each interval and substituting the missing value with relevent interval.  
+Second, the mean of none missing value steps taken.  
+Both resulted in identical answers, so I am using the easier of the two, the second method.
 
 ```{r}
 activity2 <- activity
@@ -70,7 +74,7 @@ ggplot(steps_per_day2, aes(x=date,y=steps)) +
     xlab("Date")  + ylab("Steps per day") +
     labs(title="Steps taken per day - Imputing NA's") 
 ```
-  
+
 **Project Requirement 4: Differences in activity patterns between weekdays and weekends**  
 
 ```{r, fig.width=5, fig.height=3}
@@ -82,3 +86,4 @@ ggplot(steps.new, aes(x=interval, y=steps, group=1)) +
     geom_line() + facet_wrap(~ day, ncol=1) +
     theme_economist() + scale_colour_economist()
 ```
+End of exercise.
