@@ -1,25 +1,84 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research"
+output: html_document
 ---
+### Peer Assessment I  
+Using **knitr** in **R Markdown** to produce document which is answers the assignment questions.  
+Assuming "activity.csv" file is in the same directory as the .Rmd file
 
+**Load data and required packages.**
 
-## Loading and preprocessing the data
+```{r}
+suppressMessages(library(ggthemes))
+suppressMessages(library(ggplot2))
+activity <- read.csv("activity.csv")
+activity$date<-as.Date(activity$date)
+```
 
+**Project Requirement 1: What is mean total number of steps taken per day?**
 
+```{r}
+# Aggregate steps group by date, ignore NA values.
+steps_per_day <- aggregate(steps ~ date, data = activity, FUN = sum, na.rm=TRUE)
+mean_steps_per_day <- round(mean(steps_per_day$steps))
+median_steps_per_day <- round(median(steps_per_day$steps))
+```
+Mean steps per day = `r as.integer(round(mean(steps_per_day$steps)))`  
+Median steps per day = `r as.integer(round(median(steps_per_day$steps)))`  
+```{r, fig.width=5, fig.height=3}
+ggplot(steps_per_day, aes(x=date,y=steps)) +
+    geom_bar(stat = "identity", position=position_dodge(),color="grey") +
+    stat_smooth(method="lm", se=FALSE, colour = "red", size = 1) +
+    theme_economist() + scale_colour_economist() +
+    xlab("Date")  + ylab("Steps per day") 
+```
 
-## What is mean total number of steps taken per day?
+**Project Requirement 2: What is the average daily activity pattern?**
 
+```{r}
+activity_cc <- na.omit(activity)
+steps_per_interval <- aggregate(steps ~ interval, data=activity_cc,FUN=mean)
+max_steps_interval <- round(max(steps_per_interval$steps))
+interval_max_steps <- steps_per_interval$interval[which.max(steps_per_interval$steps)]
+```
+Reporting interval `r interval_max_steps` having maximum activity.  
+Average of `r max_steps_interval` steps taken during this interval.  
+```{r, fig.width=5, fig.height=3}
+ggplot(steps_per_interval, aes(x=interval, y=steps)) +
+    geom_line(stat="identity") + theme_economist() + scale_colour_economist() +
+    geom_vline(xintercept=steps_per_interval$interval[which.max(steps_per_interval$steps)] ,color="red") +
+    labs(title="Activity Pattern",fontsize=1) 
 
+```
 
-## What is the average daily activity pattern?
+**Project Requirement 3: Imputing missing values**  
 
+```{r}
+activity2 <- activity
+activity2$steps[is.na(activity2$steps)] <- mean(na.omit(activity2$steps))
+steps_per_day2 <- aggregate(steps ~ date, data=activity2, FUN=sum)
+mean_steps_per_day2 <- round(mean(steps_per_day2$steps))
+median_steps_per_day2 <- round(median(steps_per_day2$steps))
+```
+Mean steps per day after imputing NA's = `r as.integer(round(mean(steps_per_day2$steps)))`  
+Median steps per day after imputing NA's = `r as.integer(round(median(steps_per_day2$steps)))`  
+```{r, fig.width=5, fig.height=3}
+ggplot(steps_per_day2, aes(x=date,y=steps)) +
+    geom_bar(stat = "identity", position=position_dodge()) +
+    stat_smooth(method="lm", se=FALSE, colour = "red", size = 1) +
+    theme_economist() + scale_colour_economist() +
+    xlab("Date")  + ylab("Steps per day") +
+    labs(title="Steps taken per day - Imputing NA's") 
+```
+  
+**Project Requirement 4: Differences in activity patterns between weekdays and weekends**  
 
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+```{r, fig.width=5, fig.height=3}
+activity2$day[weekdays(as.Date(activity2$date)) %in% c("Saturday", "Sunday")] <- "Weekend"
+activity2$day[!weekdays(as.Date(activity2$date)) %in% c("Saturday", "Sunday")] <- "Weekday"
+activity2[, 4] <- as.factor(activity2[, 4])
+steps.new <- aggregate(steps ~ interval + day, data=activity2, FUN=mean)
+ggplot(steps.new, aes(x=interval, y=steps, group=1)) +
+    geom_line() + facet_wrap(~ day, ncol=1) +
+    theme_economist() + scale_colour_economist()
+```
